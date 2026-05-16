@@ -1,0 +1,16 @@
+{
+  "name": "@taskflow/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"API dev script — Step 3\"",
+    "build": "echo \"API build script — Step 3\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
