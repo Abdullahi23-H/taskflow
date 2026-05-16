@@ -6,7 +6,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "echo \"API dev script — Step 3\"",
+    "dev": "tsx watch src/index.ts",
     "build": "echo \"API build script — Step 3\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
