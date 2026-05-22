@@ -2,12 +2,18 @@ import {Router}   from "express";
 import bcrypt from "bcryptjs";
 import {z} from "zod";
 import {prisma} from "../../lib/prisma.js";
+import {signAccessToken} from "../../lib/jwt.js";
 export const authRouter = Router();
 const registerSchema = z.object({
     email: z.string().email(),
     name: z.string().min(3),
     password: z.string().min(8).max(128)
 });
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8).max(128),
+});
+
 authRouter.post("/register",async(req,res)=>{
     try{
         const body  = registerSchema.parse(req.body);
@@ -45,6 +51,40 @@ authRouter.post("/register",async(req,res)=>{
             return res.status(500).json({ error: "Internal server error" });
             }
         });
+        authRouter.post("/login",async(req,res)=>{
+            try{
+                const body = loginSchema.parse(req.body);
+                const user = await prisma.user.findUnique({
+                    where:{
+                        email: body.email
+                    }
+                });
+                if(!user){
+                    return res.status(401).json({error:"Invalid email or password" })
+                }
+                const passwordOk = await bcrypt.compare(body.password,user.password);
+                if(!passwordOk){
+                    return res.status(401).json({error:"Invalid email or password" })
+                }
+                const token = signAccessToken(user.id,user.email);
+                return res.json({
+                    token, 
+                    user:{
+                        id: user.id,
+                        email: user.email,
+                        name: user.name 
+                    },
+                })
+
+            }catch(err){
+                if(err instanceof z.ZodError){
+                    return res.status(400).json({ error: "Invalid input", details: err.flatten() });
+
+                }
+                console.error(err);
+                return res.status(500).json({ error: "Internal server error" });
+            }
+        })
     
 
 
