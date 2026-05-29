@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import {z} from "zod";
 import {prisma} from "../../lib/prisma.js";
 import {signAccessToken} from "../../lib/jwt.js";
+import { authMiddleware } from "../../middleware/auth.middleware.js";
 export const authRouter = Router();
 const registerSchema = z.object({
     email: z.string().email(),
@@ -85,7 +86,26 @@ authRouter.post("/register",async(req,res)=>{
                 return res.status(500).json({ error: "Internal server error" });
             }
         })
-    
-
-
-
+        authRouter.get("/me", authMiddleware, async (req, res) => {
+            try {
+              const user = await prisma.user.findUnique({
+                where: { id: req.userId! },
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  createdAt: true,
+                  updatedAt: true,
+                },
+              });
+          
+              if (!user) {
+                return res.status(404).json({ error: "User not found" });
+              }
+          
+              return res.json({ user });
+            } catch (err) {
+              console.error(err);
+              return res.status(500).json({ error: "Internal server error" });
+            }
+          });
