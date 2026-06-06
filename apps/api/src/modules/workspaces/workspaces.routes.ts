@@ -2,11 +2,13 @@ import {Router} from "express";
 import {z} from "zod";
 import {prisma} from "../../lib/prisma.js";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { boardsRouter } from "../boards/boards.routes.js";
 export const workspacesRouter = Router();
 const createWorkspaceSchema =z.object({
     name: z.string().min(1).max(100),
 })
 workspacesRouter.use(authMiddleware);
+workspacesRouter.use("/:workspaceId/boards", boardsRouter);
 workspacesRouter.post('/',async(req,res)=>{
     try{
         const body  = createWorkspaceSchema.parse(req.body);
