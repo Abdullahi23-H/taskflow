@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { listsRouter } from "../lists/lists.routes.js";
 
 export const boardsRouter = Router({ mergeParams: true });
 
@@ -10,6 +11,7 @@ const createBoardSchema = z.object({
 });
 
 boardsRouter.use(authMiddleware);
+boardsRouter.use("/:boardId/lists", listsRouter);
 
 // POST /api/workspaces/:workspaceId/boards
 boardsRouter.post("/", async (req, res) => {
