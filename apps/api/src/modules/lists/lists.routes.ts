@@ -2,12 +2,13 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { cardsRouter } from "../cards/cards.routes.js";
 export const listsRouter = Router({ mergeParams: true});
 const createListSchema = z.object({
     name: z.string().min(1).max(100),
   });
   listsRouter.use(authMiddleware);
-
+  listsRouter.use("/:listId/cards", cardsRouter);
   listsRouter.post("/", async(req,res)=>{
     try{
         const workspaceId = (req.params as any).workspaceId as string;

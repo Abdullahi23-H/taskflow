@@ -1,0 +1,118 @@
+import {Router} from "express";
+import {z} from "zod";
+import {prisma} from "../../lib/prisma.js";
+import { authMiddleware } from "../../middleware/auth.middleware.js";
+export const  cardsRouter = Router({mergeParams: true});
+
+
+const createCardSchema = z.object({
+    title: z.string().min(1).max(200),
+    description: z.string().max(2000).optional(),
+    dueDate: z.string().datetime().optional(),
+    status: z.enum(["todo", "in_progress", "done"]).optional(),
+});
+cardsRouter.use(authMiddleware);
+cardsRouter.post("/",async(req, res)=>{
+    try{
+        const workspaceId = (req.params as any).workspaceId as string;
+        const boardId  = (req.params as any).boardId as string;
+        const listId = (req.params as any).listId as string;
+        const body = createCardSchema.parse(req.body);
+        const list = await prisma.list.findFirst({
+            where:{
+                id: listId,
+                boardId:boardId,
+                board:{
+                    workspaceId: workspaceId,
+                    workspace: {ownerId: req.userId!},
+                }
+            }
+        })
+        if(!list){
+            return res.status(404).json({error: "List not found"});
+        }
+        const position = await prisma.card.count({
+            where:{
+                listId: list.id,
+            }
+        });
+        const card = await prisma.card.create({
+            data:{
+                title:body.title,
+                description: body.description,
+                dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+                status: body.status ?? "todo",
+                listId: list.id,
+                position,
+            },
+            select:{
+                id: true,
+                title: true,
+                description: true,
+                dueDate: true,
+                status: true,
+                listId: true,
+                position: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+        return res.status(201).json({ card });
+    }catch(err){
+        if(err instanceof z.ZodError){
+            return res.status(400).json({error: "Invalid input", details: err.flatten()});
+        }
+        console.error(err);
+        return res.status(500).json({error: "Internal server error"});
+    }
+    
+});
+
+
+cardsRouter.get("/", async(req, res)=>{
+    try{
+        const workspaceId = (req.params as any).workspaceId as string;
+        const boardId = (req.params as any).boardId as string;
+        const listId = (req.params as any).listId as string;
+        const list = await prisma.list.findFirst({
+            where:{
+                id: listId ,
+                boardId: boardId,
+                board:{
+                    workspaceId: workspaceId,
+                    workspace: {ownerId: req.userId!},
+                },
+            },
+        });
+        if(!list){
+            return res.status(404).json({error: "List not found"});
+        }
+        const cards = await prisma.card.findMany({
+            where:{
+                listId: list.id,
+            },
+            select:{
+                id: true,
+                title: true,
+                description: true,
+                dueDate: true,
+                status: true,
+                listId: true,
+                position: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+            orderBy:{
+                position: "asc",
+            },
+        });
+        return res.json({ cards });
+    }catch(err){
+        if(err instanceof z.ZodError){
+            return res.status(400).json({error: "Invalid input", details: err.flatten()});
+        }
+        console.error(err);
+        return res.status(500).json({error: "Internal server error"});
+    }
+});
+
