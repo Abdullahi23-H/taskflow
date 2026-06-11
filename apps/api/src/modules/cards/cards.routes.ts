@@ -14,7 +14,14 @@ const createCardSchema = z.object({
 const moveCardSchema = z.object({
     targetListId: z.string().min(1),
     position: z.number().int().min(0),
-})
+});
+
+const updatedCardSchema = z.object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(2000).optional(),
+    dueDate: z.string().datetime().optional(),
+    status: z.enum(["todo", "in_progress", "done"]).optional(),
+});
 cardsRouter.use(authMiddleware);
 cardsRouter.post("/",async(req, res)=>{
     try{
@@ -189,4 +196,101 @@ cardsRouter.get("/", async(req, res)=>{
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
- })
+ });
+
+
+ cardsRouter.patch("/:cardId",async(req,res)=>{
+    try{
+        const workspaceId = (req.params as any).workspaceId as string;
+        const boardId = (req.params as any).boardId as string;
+        const listId = ( req.params as any ).listId as string;
+        const cardId = (req.params as any ).cardId as string;
+        const body  = updatedCardSchema.parse(req.body);
+
+        const existing = await prisma.card.findFirst({
+            where:{
+                id:cardId,
+                list:{
+                    id:listId,
+                    boardId:boardId,
+                    board:{
+                        workspaceId:workspaceId,
+                        workspace: {ownerId: req.userId!},
+                    },
+                },
+
+            },
+        });
+        if(!existing){
+            return res.status(404).json({ error: "Card not found" });
+        }
+        const card =await prisma.card.update({
+            where:{id:cardId},
+            data:{
+            ...(body.title!==undefined && {title:body.title}),
+            ...(body.description!==undefined && {description:body.description}),
+            ...(body.dueDate!==undefined && {dueDate:body.dueDate ? new Date(body.dueDate) : null}),
+            ...(body.status!==undefined && {status:body.status}),
+            },
+            select:{
+                id: true,
+                title: true,
+                description: true,
+                dueDate: true,
+                status: true,
+                listId: true,
+                position: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+
+        });
+        return res.json({card});
+
+    }catch(err){
+        if(err instanceof z.ZodError){
+            return res.status(400).json({error: "Invalid input", details: err.flatten()});
+        }
+        console.error(err);
+        return res.status(500).json({error: "Internal server error"});
+    }
+ });
+
+
+ cardsRouter.delete("/:cardId", async(req ,res)=>{
+    try{
+        const workspaceId = (req.params as any ).workspaceId as string;
+        const boardId = (req.params as any ).boardId as string;
+        const listId = (req.params as any ).listId as string;
+        const cardId = (req.params as any ).cardId as string;
+
+        const existing = await prisma.card.findFirst({
+            where:{
+                id:cardId,
+                list:{
+                    id: listId,
+                    boardId:boardId,
+                    board:{
+                        workspaceId:workspaceId,
+                        workspace: {ownerId: req.userId!},
+                    },
+                },
+            },
+        });
+        if(!existing){
+            return res.status(404).json({ error: "Card not found"});
+        }
+        await prisma.card.delete({
+            where:{id:existing.id},
+
+        });
+        return res.status(204).send();
+    }catch(err){
+        if(err instanceof z.ZodError){
+            return res.status(400).json({error: "Invalid input", details: err.flatten()});
+        }
+        console.error(err);
+        return res.status(500).json({error: "Internal server error"});
+    }
+    
+ });
