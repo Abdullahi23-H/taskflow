@@ -88,3 +88,29 @@ boardsRouter.get("/", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// DELETE /api/workspaces/:workspaceId/boards/:boardId
+boardsRouter.delete("/:boardId", async (req, res) => {
+  try {
+    const workspaceId = (req.params as any).workspaceId as string;
+    const { boardId } = req.params;
+
+    const board = await prisma.board.findFirst({
+      where: {
+        id: boardId,
+        workspace: { id: workspaceId, ownerId: req.userId! },
+      },
+    });
+
+    if (!board) {
+      return res.status(404).json({ error: "Board not found" });
+    }
+
+    await prisma.board.delete({ where: { id: boardId } });
+
+    return res.json({ message: "Board deleted" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});

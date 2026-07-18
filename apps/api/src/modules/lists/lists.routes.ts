@@ -98,5 +98,36 @@ return res.status(201).json({list});
         };
         
     })
-  
+
+  // DELETE /api/workspaces/:workspaceId/boards/:boardId/lists/:listId
+  listsRouter.delete("/:listId", async (req, res) => {
+    try {
+      const workspaceId = (req.params as any).workspaceId as string;
+      const boardId = (req.params as any).boardId as string;
+      const { listId } = req.params;
+
+      const list = await prisma.list.findFirst({
+        where: {
+          id: listId,
+          boardId,
+          board: {
+            workspaceId,
+            workspace: { ownerId: req.userId! },
+          },
+        },
+      });
+
+      if (!list) {
+        return res.status(404).json({ error: "List not found" });
+      }
+
+      await prisma.list.delete({ where: { id: listId } });
+
+      return res.status(204).send();
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   

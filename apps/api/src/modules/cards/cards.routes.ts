@@ -19,7 +19,7 @@ const moveCardSchema = z.object({
 const updatedCardSchema = z.object({
     title: z.string().min(1).max(200).optional(),
     description: z.string().max(2000).optional(),
-    dueDate: z.string().datetime().optional(),
+    dueDate: z.string().datetime().nullable().optional(),
     status: z.enum(["todo", "in_progress", "done"]).optional(),
 });
 cardsRouter.use(authMiddleware);

@@ -41,7 +41,8 @@ authRouter.post("/register",async(req,res)=>{
                 updatedAt: true
             }
         });
-        return res.status(201).json({user});
+        const token = signAccessToken(user.id, user.email);
+        return res.status(201).json({ token, user });
         
 
         }catch(err){
@@ -107,5 +108,5 @@ authRouter.post("/register",async(req,res)=>{
             } catch (err) {
               console.error(err);
               return res.status(500).json({ error: "Internal server error" });
-            }
-          });
+            }   
+          });  

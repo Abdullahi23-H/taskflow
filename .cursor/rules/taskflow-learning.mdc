@@ -1,0 +1,34 @@
+---
+description: TaskFlow learning workflow — one step at a time, user writes code
+alwaysApply: true
+---
+
+# TaskFlow — how to help
+
+## Workflow (always follow)
+- User writes all code; assistant gives **one step only** per message.
+- User says **"Step X done"** before the next step.
+- Each step: Goal → instructions → verification → **detailed explanation** at the end.
+- Read **ROADMAP.md** for completed steps, current step, and what is next.
+- Do not commit or push unless the user asks.
+
+## Project layout
+- `apps/api` — Express + TypeScript + Prisma 7 + MySQL + JWT (port 3001)
+- `apps/web` — React + Vite + TypeScript (port 5173)
+- Open workspace at repo root: `prof_project/` (not `apps/api` alone)
+
+## Stack (locked in)
+- Backend: Node, Express, TypeScript, Zod, bcrypt, jsonwebtoken, Prisma 7 + MariaDB adapter
+- DB: MySQL 8 local, database `taskflow`
+- Frontend: React + Vite + TypeScript (Tailwind later)
+- Auth: JWT access token, 15 min expiry
+
+## API patterns already established
+- Nested routes: workspaces → boards → lists → cards
+- `mergeParams: true` on nested routers
+- `authMiddleware` on protected routes; ownership via nested Prisma `where`
+- Zod validation; `.nullable()` when client sends `null` to clear optional fields
+
+## When user starts a new chat
+- Assume ROADMAP.md is current; continue from **Current step** there.
+- If unsure, ask once: "Which step are you on?" then proceed one step only.
