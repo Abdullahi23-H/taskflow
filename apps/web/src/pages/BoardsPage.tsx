@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { BoardView } from "./BoardView";
 
 type Board = { id: string; name: string; createdAt: string };
-type Props = { workspaceId: string; workspaceName: string; onBack: () => void };
+type Props = { onLogout: () => void };
 
-export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
+export function BoardsPage({ onLogout }: Props) {
+  const navigate = useNavigate();
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const location = useLocation();
+  const workspaceName = (location.state as any)?.workspaceName ?? "Workspace";
+
   const [boards, setBoards] = useState<Board[]>([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedBoard, setSelectedBoard] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,10 +56,7 @@ export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
     setError(null);
     setDeleting(boardId);
     try {
-      const res = await apiFetch(
-        `/api/workspaces/${workspaceId}/boards/${boardId}`,
-        { method: "DELETE" }
-      );
+      const res = await apiFetch(`/api/workspaces/${workspaceId}/boards/${boardId}`, { method: "DELETE" });
       if (!res.ok) { setError("Failed to delete board"); return; }
       setBoards((prev) => prev.filter((b) => b.id !== boardId));
     } catch {
@@ -65,32 +66,28 @@ export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
     }
   }
 
-  if (selectedBoard) {
-    return (
-      <BoardView
-        workspaceId={workspaceId}
-        boardId={selectedBoard.id}
-        boardName={selectedBoard.name}
-        onBack={() => setSelectedBoard(null)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-3 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/workspaces")}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Workspaces
+          </button>
+          <span className="text-gray-300">/</span>
+          <span className="text-sm font-semibold text-gray-800">{workspaceName}</span>
+        </div>
         <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          onClick={onLogout}
+          className="text-sm text-gray-500 hover:text-red-500 transition-colors border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-lg"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Workspaces
+          Log out
         </button>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-semibold text-gray-800">{workspaceName}</span>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
@@ -99,7 +96,6 @@ export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
           <p className="text-sm text-gray-400 mt-0.5">Select a board or create a new one</p>
         </div>
 
-        {/* Create form */}
         <form onSubmit={handleCreate} className="flex gap-3 mb-10">
           <input
             type="text"
@@ -143,12 +139,15 @@ export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
           </div>
         )}
 
-        {/* Board grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {boards.map((b) => (
             <div
               key={b.id}
-              onClick={() => setSelectedBoard({ id: b.id, name: b.name })}
+              onClick={() =>
+                navigate(`/workspaces/${workspaceId}/boards/${b.id}`, {
+                  state: { boardName: b.name, workspaceName },
+                })
+              }
               className="relative bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group"
             >
               <div className="flex items-start gap-3">
@@ -162,7 +161,6 @@ export function BoardsPage({ workspaceId, workspaceName, onBack }: Props) {
                   <p className="text-xs text-gray-400 mt-0.5">Click to open</p>
                 </div>
               </div>
-              {/* Delete button */}
               <button
                 onClick={(e) => handleDelete(e, b.id)}
                 disabled={deleting === b.id}

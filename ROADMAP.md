@@ -43,7 +43,7 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 5 — Step 1:** Install Vitest + supertest + write first auth tests
+**Phase 7 — Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
 
 ---
 
@@ -95,9 +95,9 @@ This is not optional. Never skip it.
 - [x] **Step 5.5:** List and card tests — create, delete
 
 ### Phase 6 — React Router
-- [ ] **Step 6.1:** Install React Router v6; replace if/else navigation with routes
-- [ ] **Step 6.2:** Add protected routes (redirect to login if no token)
-- [ ] **Step 6.3:** Proper URLs: `/workspaces`, `/workspaces/:id`, `/boards/:id`
+- [x] **Step 6.1:** Install React Router v6; replace if/else navigation with routes
+- [x] **Step 6.2:** Add protected routes (redirect to login if no token)
+- [x] **Step 6.3:** Proper URLs: `/workspaces`, `/workspaces/:id`, `/boards/:id`
 
 ### Phase 7 — Card improvements
 - [ ] **Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
