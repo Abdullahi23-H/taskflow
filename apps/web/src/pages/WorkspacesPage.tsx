@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { BoardsPage } from "./BoardsPage";
 
 type Workspace = { id: string; name: string; createdAt: string };
 type Props = { userName: string; userEmail: string; onLogout: () => void };
 
-export function WorkspacesPage({ userName, userEmail, onLogout }: Props) {
+export function WorkspacesPage({ userName, onLogout }: Props) {
+  const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,19 +62,8 @@ export function WorkspacesPage({ userName, userEmail, onLogout }: Props) {
     }
   }
 
-  if (selected) {
-    return (
-      <BoardsPage
-        workspaceId={selected.id}
-        workspaceName={selected.name}
-        onBack={() => setSelected(null)}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -108,7 +97,6 @@ export function WorkspacesPage({ userName, userEmail, onLogout }: Props) {
           </div>
         </div>
 
-        {/* Create form */}
         <form onSubmit={handleCreate} className="flex gap-3 mb-10">
           <input
             type="text"
@@ -152,12 +140,11 @@ export function WorkspacesPage({ userName, userEmail, onLogout }: Props) {
           </div>
         )}
 
-        {/* Workspace grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              onClick={() => setSelected({ id: ws.id, name: ws.name })}
+              onClick={() => navigate(`/workspaces/${ws.id}`, { state: { workspaceName: ws.name } })}
               className="relative bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group"
             >
               <div className="flex items-start gap-3">
@@ -171,7 +158,6 @@ export function WorkspacesPage({ userName, userEmail, onLogout }: Props) {
                   <p className="text-xs text-gray-400 mt-0.5">Click to open</p>
                 </div>
               </div>
-              {/* Delete button */}
               <button
                 onClick={(e) => handleDelete(e, ws.id)}
                 disabled={deleting === ws.id}

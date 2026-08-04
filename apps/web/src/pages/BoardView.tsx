@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
 type Card = { id: string; title: string; status: string; position: number };
 type List = { id: string; name: string; position: number; cards?: Card[] };
 
-type Props = {
-  workspaceId: string;
-  boardId: string;
-  boardName: string;
-  onBack: () => void;
-};
 
-export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
+
+export function BoardView() {
+  const navigate = useNavigate();
+  const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
+  const location = useLocation();
+  const boardName = (location.state as any)?.boardName ?? "Board";
+
   const [lists, setLists] = useState<List[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +138,7 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
       {/* Navbar */}
       <header className="flex items-center gap-3 px-6 py-4 flex-shrink-0" style={{ background: "#17202b" }}>
         <button
-          onClick={onBack}
+          onClick={() => navigate(`/workspaces/${workspaceId}`, { state: { workspaceName: (location.state as any)?.workspaceName } })}
           className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
