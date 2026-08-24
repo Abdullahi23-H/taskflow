@@ -10,6 +10,7 @@ const createCardSchema = z.object({
     description: z.string().max(2000).optional(),
     dueDate: z.string().datetime().optional(),
     status: z.enum(["todo", "in_progress", "done"]).optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
 });
 const moveCardSchema = z.object({
     targetListId: z.string().min(1),
@@ -21,6 +22,7 @@ const updatedCardSchema = z.object({
     description: z.string().max(2000).optional(),
     dueDate: z.string().datetime().nullable().optional(),
     status: z.enum(["todo", "in_progress", "done"]).optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
 });
 cardsRouter.use(authMiddleware);
 cardsRouter.post("/",async(req, res)=>{
@@ -53,6 +55,7 @@ cardsRouter.post("/",async(req, res)=>{
                 description: body.description,
                 dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
                 status: body.status ?? "todo",
+                priority: body.priority ?? "MEDIUM",
                 listId: list.id,
                 position,
             },
@@ -62,6 +65,7 @@ cardsRouter.post("/",async(req, res)=>{
                 description: true,
                 dueDate: true,
                 status: true,
+                priority: true,
                 listId: true,
                 position: true,
                 createdAt: true,
@@ -108,6 +112,7 @@ cardsRouter.get("/", async(req, res)=>{
                 description: true,
                 dueDate: true,
                 status: true,
+                priority: true,
                 listId: true,
                 position: true,
                 createdAt: true,
@@ -182,6 +187,7 @@ cardsRouter.get("/", async(req, res)=>{
           description: true,
           dueDate: true,
           status: true,
+          priority: true,
           position: true,
           listId: true,
           createdAt: true,
@@ -231,6 +237,7 @@ cardsRouter.get("/", async(req, res)=>{
             ...(body.description!==undefined && {description:body.description}),
             ...(body.dueDate!==undefined && {dueDate:body.dueDate ? new Date(body.dueDate) : null}),
             ...(body.status!==undefined && {status:body.status}),
+            ...(body.priority!==undefined && {priority:body.priority}),
             },
             select:{
                 id: true,
@@ -238,6 +245,7 @@ cardsRouter.get("/", async(req, res)=>{
                 description: true,
                 dueDate: true,
                 status: true,
+                priority: true, 
                 listId: true,
                 position: true,
                 createdAt: true,

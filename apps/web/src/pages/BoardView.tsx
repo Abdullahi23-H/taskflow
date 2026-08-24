@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
-type Card = { id: string; title: string; status: string; position: number };
+type Card = {
+  id: string;
+  title: string;
+  status: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  dueDate: string | null;
+  position: number;
+};
 type List = { id: string; name: string; position: number; cards?: Card[] };
 
 
@@ -19,6 +26,8 @@ export function BoardView() {
   const [newListName, setNewListName] = useState("");
   const [creatingList, setCreatingList] = useState(false);
   const [newCardTitles, setNewCardTitles] = useState<Record<string, string>>({});
+  const [newCardPriority, setNewCardPriority] = useState<Record<string, string>>({});
+  const [newCardDueDate, setNewCardDueDate] = useState<Record<string, string>>({}); 
   const [addingCardTo, setAddingCardTo] = useState<string | null>(null);
   const [deletingList, setDeletingList] = useState<string | null>(null);
   const [deletingCard, setDeletingCard] = useState<string | null>(null);
@@ -89,7 +98,12 @@ export function BoardView() {
     try {
       const res = await apiFetch(`${base}/lists/${listId}/cards`, {
         method: "POST",
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ 
+          title ,
+        priority: newCardPriority[listId] || "MEDIUM",
+  dueDate: newCardDueDate[listId] ? new Date(newCardDueDate[listId]).toISOString() : undefined,
+
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to create card"); return; }
@@ -100,6 +114,8 @@ export function BoardView() {
       );
       setNewCardTitles((prev) => ({ ...prev, [listId]: "" }));
       setAddingCardTo(null);
+      setNewCardPriority((prev) => ({ ...prev, [listId]: "" }));
+setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
     } catch {
       setError("Could not reach API");
     }
@@ -132,6 +148,20 @@ export function BoardView() {
     in_progress: "bg-blue-100 text-blue-700",
     done: "bg-green-100 text-green-700",
   };
+
+  const priorityDot: Record<string, string> = {
+    LOW: "bg-gray-400",
+    MEDIUM: "bg-yellow-400",
+    HIGH: "bg-red-500",
+  };
+
+  function formatDueDate(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const isOverdue = d < now;
+    const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return { label, isOverdue };
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#1d2b3a" }}>
@@ -207,10 +237,22 @@ export function BoardView() {
                     className="bg-white rounded-xl px-3 py-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-default group/card relative"
                   >
                     <p className="text-sm text-gray-800 font-medium leading-snug pr-6">{card.title}</p>
-                    <div className="flex items-center mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[card.status] ?? statusColor.todo}`}>
                         {card.status.replace("_", " ")}
                       </span>
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <span className={`w-2 h-2 rounded-full ${priorityDot[card.priority] ?? priorityDot.MEDIUM}`} />
+                        {card.priority.charAt(0) + card.priority.slice(1).toLowerCase()}
+                      </span>
+                      {card.dueDate && (() => {
+                        const { label, isOverdue } = formatDueDate(card.dueDate);
+                        return (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isOverdue ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
+                            {isOverdue ? "⚠ " : ""}{label}
+                          </span>
+                        );
+                      })()}
                     </div>
                     {/* Card delete button */}
                     <button
@@ -249,6 +291,23 @@ export function BoardView() {
                       }}
                       className="w-full text-sm text-gray-800 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    <div className="flex gap-2 mt-2">
+  <select
+    value={newCardPriority[list.id] ?? "MEDIUM"}
+    onChange={(e) => setNewCardPriority((prev) => ({ ...prev, [list.id]: e.target.value }))}
+    className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  >
+    <option value="LOW">Low</option>
+    <option value="MEDIUM">Medium</option>
+    <option value="HIGH">High</option>
+  </select>
+  <input
+    type="date"
+    value={newCardDueDate[list.id] ?? ""}
+    onChange={(e) => setNewCardDueDate((prev) => ({ ...prev, [list.id]: e.target.value }))}
+    className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+</div>
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleCreateCard(list.id)}

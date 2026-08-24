@@ -43,7 +43,7 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 7 — Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
+**Phase 7 — Step 7.3:** Show due date + priority on card UI in BoardView
 
 ---
 
@@ -100,8 +100,8 @@ This is not optional. Never skip it.
 - [x] **Step 6.3:** Proper URLs: `/workspaces`, `/workspaces/:id`, `/boards/:id`
 
 ### Phase 7 — Card improvements
-- [ ] **Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
-- [ ] **Step 7.2:** Add `priority` field (low / medium / high) with colored dot
+- [x] **Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
+- [x] **Step 7.2:** Add `priority` field (low / medium / high) with colored dot
 - [ ] **Step 7.3:** Show due date + priority on card UI in BoardView
 
 ### Phase 8 — Dashboard page
