@@ -51,6 +51,11 @@ model List {
   updatedAt DateTime @updatedAt
    cards     Card[]
 }
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
 
 model Card {
   id          String    @id @default(cuid())
@@ -58,6 +63,7 @@ model Card {
   description String?   @db.Text
   dueDate     DateTime?
   status      String    @default("todo")
+  priority    Priority  @default(MEDIUM)
   position    Int       @default(0)
   listId      String
   list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
