@@ -7,9 +7,19 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { WorkspacesPage } from "./pages/WorkspacesPage";
 import { BoardsPage } from "./pages/BoardsPage";
 import { BoardView } from "./pages/BoardView";
+import { DashboardPage } from "./pages/DashboardPage";
+import { Navbar } from "./components/Navbar";
+
 
 type User = { id: string; email: string; name: string };
-
+function ProtectedLayout({user,onLogout,children}:{user:User; onLogout:()=>void; children:React.ReactNode}) {
+  return(
+    <>
+    <Navbar userName={user.name} onLogout={onLogout}/>
+  {children}
+    </>
+  )
+}
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,20 +55,22 @@ function App() {
       <Route
         path="/login"
         element={
-          user ? <Navigate to="/workspaces" replace /> : <LoginPage onSuccess={setUser} />
+          user ? <Navigate to="/dashboard" replace /> : <LoginPage onSuccess={setUser} />
         }
       />
       <Route
         path="/register"
         element={
-          user ? <Navigate to="/workspaces" replace /> : <RegisterPage />
+          user ? <Navigate to="/dashboard" replace /> : <RegisterPage />
         }
       />
       <Route
         path="/workspaces"
         element={
           user ? (
-            <WorkspacesPage userName={user.name} userEmail={user.email} onLogout={handleLogout} />
+            <ProtectedLayout user={user} onLogout={handleLogout}>
+              <WorkspacesPage userName={user.name} userEmail={user.email} />
+            </ProtectedLayout>
           ) : (
             <Navigate to="/login" replace />
           )
@@ -66,13 +78,16 @@ function App() {
       />
       <Route
         path="/workspaces/:workspaceId"
-        element={user ? <BoardsPage onLogout={handleLogout} /> : <Navigate to="/login" replace />}
-      />
+        element={user ? <ProtectedLayout user={user} onLogout={handleLogout}><BoardsPage /></ProtectedLayout> : <Navigate to="/login" replace />}      />
       <Route
         path="/workspaces/:workspaceId/boards/:boardId"
-        element={user ? <BoardView /> : <Navigate to="/login" replace />}
+        element={user ? <ProtectedLayout user={user} onLogout={handleLogout}><BoardView /></ProtectedLayout> : <Navigate to="/login" replace />}
       />
-      <Route path="*" element={<Navigate to={user ? "/workspaces" : "/login"} replace />} />
+      <Route
+        path="/dashboard"
+        element={user ? <ProtectedLayout user={user} onLogout={handleLogout}><DashboardPage /></ProtectedLayout> : <Navigate to="/login" replace />}
+      />
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );
 }
