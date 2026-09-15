@@ -3,9 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
 type Board = { id: string; name: string; createdAt: string };
-type Props = { onLogout: () => void };
-
-export function BoardsPage({ onLogout }: Props) {
+export function BoardsPage() {
   const navigate = useNavigate();
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const location = useLocation();
@@ -68,28 +66,6 @@ export function BoardsPage({ onLogout }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/workspaces")}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Workspaces
-          </button>
-          <span className="text-gray-300">/</span>
-          <span className="text-sm font-semibold text-gray-800">{workspaceName}</span>
-        </div>
-        <button
-          onClick={onLogout}
-          className="text-sm text-gray-500 hover:text-red-500 transition-colors border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-lg"
-        >
-          Log out
-        </button>
-      </header>
-
       <main className="max-w-5xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900">{workspaceName}</h2>

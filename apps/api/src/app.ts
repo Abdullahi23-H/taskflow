@@ -3,6 +3,7 @@ import "dotenv/config";
 import cors from "cors";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { workspacesRouter } from "./modules/workspaces/workspaces.routes.js";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 
 export const app = express();
 
@@ -27,3 +28,4 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/workspaces", workspacesRouter);
+app.use("/api/dashboard", dashboardRouter);
