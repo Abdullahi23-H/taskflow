@@ -43,7 +43,7 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 7 — Step 7.3:** Show due date + priority on card UI in BoardView
+**Phase 9 — Step 9.1:** Add search endpoint to API
 
 ---
 
@@ -102,12 +102,12 @@ This is not optional. Never skip it.
 ### Phase 7 — Card improvements
 - [x] **Step 7.1:** Add `dueDate` field to card (Prisma migration + API)
 - [x] **Step 7.2:** Add `priority` field (low / medium / high) with colored dot
-- [ ] **Step 7.3:** Show due date + priority on card UI in BoardView
+- [x] **Step 7.3:** Show due date + priority on card UI in BoardView
 
 ### Phase 8 — Dashboard page
-- [ ] **Step 8.1:** Create `/dashboard` route with sidebar navigation
-- [ ] **Step 8.2:** Show stats: total cards, in progress, completed, overdue
-- [ ] **Step 8.3:** Show all cards across all workspaces grouped by status
+- [x] **Step 8.1:** Create `/dashboard` route with stats and card list
+- [x] **Step 8.2:** Show stats: total cards, in progress, completed, overdue
+- [x] **Step 8.3:** Shared Navbar component + ProtectedLayout in App.tsx
 
 ### Phase 9 — Search
 - [ ] **Step 9.1:** Add search endpoint to API (search cards by title)
