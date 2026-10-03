@@ -11,6 +11,7 @@ const createCardSchema = z.object({
     dueDate: z.string().datetime().optional(),
     status: z.enum(["todo", "in_progress", "done"]).optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+    assigneeId: z.string().optional().nullable(),
 });
 const moveCardSchema = z.object({
     targetListId: z.string().min(1),
@@ -23,6 +24,7 @@ const updatedCardSchema = z.object({
     dueDate: z.string().datetime().nullable().optional(),
     status: z.enum(["todo", "in_progress", "done"]).optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+    assigneeId: z.string().optional().nullable(),
 });
 cardsRouter.use(authMiddleware);
 cardsRouter.post("/",async(req, res)=>{
@@ -70,6 +72,7 @@ cardsRouter.post("/",async(req, res)=>{
                 position: true,
                 createdAt: true,
                 updatedAt: true,
+                assignee: { select: { id: true, name: true } }
             }
         });
         return res.status(201).json({ card });
@@ -117,6 +120,7 @@ cardsRouter.get("/", async(req, res)=>{
                 position: true,
                 createdAt: true,
                 updatedAt: true,
+                assignee: { select: { id: true, name: true } }
             },
             orderBy:{
                 position: "asc",
@@ -192,6 +196,7 @@ cardsRouter.get("/", async(req, res)=>{
           listId: true,
           createdAt: true,
           updatedAt: true,
+          assignee: { select: { id: true, name: true } }
         },
       });
       return res.json({ card: updatedCard });
@@ -250,6 +255,7 @@ cardsRouter.get("/", async(req, res)=>{
                 position: true,
                 createdAt: true,
                 updatedAt: true,
+                assignee: { select: { id: true, name: true } }
             },
 
         });
