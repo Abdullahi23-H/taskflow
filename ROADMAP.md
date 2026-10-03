@@ -43,7 +43,7 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 9 — Step 9.1:** Add search endpoint to API
+**Phase 11 — Step 11.1:** Prepare backend for production
 
 ---
 
@@ -110,18 +110,84 @@ This is not optional. Never skip it.
 - [x] **Step 8.3:** Shared Navbar component + ProtectedLayout in App.tsx
 
 ### Phase 9 — Search
-- [ ] **Step 9.1:** Add search endpoint to API (search cards by title)
-- [ ] **Step 9.2:** Add search bar in navbar; show results as dropdown
+- [x] **Step 9.1:** Add search endpoint to API (search cards by title)
+- [x] **Step 9.2:** Add search bar in navbar; show results as dropdown
 
 ### Phase 10 — Assignees
-- [ ] **Step 10.1:** Add `assigneeId` field to card (Prisma migration + API)
-- [ ] **Step 10.2:** Show assignee avatar initials on card UI
+- [x] **Step 10.1:** Add `assigneeId` field to card (Prisma migration + API)
+- [x] **Step 10.2:** Show assignee avatar initials on card UI
 
 ### Phase 11 — Deploy
-- [ ] **Step 11.1:** Dockerize backend (`Dockerfile` + `.dockerignore`)
-- [ ] **Step 11.2:** Deploy backend to Railway or Render
-- [ ] **Step 11.3:** Deploy frontend to Vercel
-- [ ] **Step 11.4:** Set up environment variables for production
+> Git workflow first — before starting anything run:
+> ```
+> git checkout master
+> git pull origin master
+> git checkout -b feat/phase-11-deploy
+> ```
+
+- [ ] **Step 11.1 — Prepare backend for production**
+  - Add `"build": "tsc"` script to `apps/api/package.json`
+  - Add `"start": "node dist/index.js"` script
+  - Move `JWT_SECRET` and `DATABASE_URL` to `process.env` (no hardcoded values)
+  - Configure CORS to read allowed origin from `process.env.FRONTEND_URL`
+  - Create `apps/api/.env.example` with all required variable names (no real values)
+  - Add `prisma migrate deploy` to the build command
+
+- [ ] **Step 11.2 — Prepare frontend for production**
+  - Replace every hardcoded `http://localhost:3001` with `import.meta.env.VITE_API_URL`
+  - Update `apps/web/src/lib/api.ts` to use `VITE_API_URL` as the base URL
+  - Create `apps/web/.env.example` with `VITE_API_URL=https://your-render-url.onrender.com`
+  - Verify `npm run build` completes without errors
+
+- [ ] **Step 11.3 — Deploy database on Render**
+  - Go to render.com → create free account
+  - Click New → PostgreSQL → free tier
+  - Copy the **Internal Database URL**
+  - Save it — needed in next step
+
+- [ ] **Step 11.4 — Deploy backend on Render**
+  - Click New → Web Service on Render
+  - Connect GitHub repo
+  - Set root directory: `apps/api`
+  - Build command: `npm install && npm run build && npx prisma migrate deploy`
+  - Start command: `npm start`
+  - Runtime: Node
+  - Add environment variables: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `FRONTEND_URL` (add after Step 11.5)
+  - Copy the Render backend URL after deploy succeeds
+
+- [ ] **Step 11.5 — Deploy frontend on Vercel**
+  - Go to vercel.com → create free account
+  - Connect GitHub repo → select `apps/web` folder
+  - Add environment variable: `VITE_API_URL=<Render backend URL from Step 11.4>`
+  - Click deploy
+  - Copy the Vercel frontend URL
+  - Go back to Render → update `FRONTEND_URL` with the Vercel URL
+
+- [ ] **Step 11.6 — Connect Namecheap domain**
+  - Log in to namecheap.com → Domain List → confirm domain is Active (renew if expired)
+  - **Frontend:** Vercel → project → Settings → Domains → add your domain → copy DNS records → paste in Namecheap Advanced DNS
+  - **Backend:** Use `api.yourdomain.com` → Render → Settings → Custom Domains → add `api.yourdomain.com` → copy DNS record → paste in Namecheap Advanced DNS
+  - Wait 24–48 hours for DNS propagation
+
+- [ ] **Step 11.7 — Test everything in production**
+  - Test register and login
+  - Test creating workspace, board, list, card
+  - Test dashboard stats
+  - Test search
+  - Verify all pages load on the custom domain
+  - Check Render logs and Vercel logs if anything fails
+
+- [ ] **Step 11.8 — Final Git cleanup**
+  - `git add .`
+  - `git commit -m "feat: add production deployment configuration"`
+  - `git push origin feat/phase-11-deploy`
+  - Open PR on GitHub → merge into master
+  - `git checkout master && git pull origin master`
+
+> **Final result:**
+> - `yourdomainname.com` → Frontend on Vercel
+> - `api.yourdomainname.com` → Backend on Render
+> - Database → Render PostgreSQL
 
 ---
 

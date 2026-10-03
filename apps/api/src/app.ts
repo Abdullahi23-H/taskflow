@@ -12,9 +12,14 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (/^http:\/\/localhost:\d+$/.test(origin)) {
-        return callback(null, true);
-      }
+      const allowed = [
+        /^http:\/\/localhost:\d+$/,
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+      const isAllowed = allowed.some((o) =>
+        typeof o === "string" ? o === origin : o!.test(origin)
+      );
+      if (isAllowed) return callback(null, true);
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true,

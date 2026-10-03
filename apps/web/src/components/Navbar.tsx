@@ -83,7 +83,7 @@ export function Navbar({ userName, onLogout }: Props) {
       <nav className="flex gap-1 flex-shrink-0">
         <NavLink
           to="/dashboard"
-          className={({ isActive }) =>
+          className={({ isActive }: { isActive: boolean }) =>
             `px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
               isActive ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
             }`
@@ -93,7 +93,7 @@ export function Navbar({ userName, onLogout }: Props) {
         </NavLink>
         <NavLink
           to="/workspaces"
-          className={({ isActive }) =>
+          className={({ isActive }: { isActive: boolean }) =>
             `px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${
               isActive ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
             }`
