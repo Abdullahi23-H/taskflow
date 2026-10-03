@@ -9,8 +9,10 @@ type Card = {
   priority: "LOW" | "MEDIUM" | "HIGH";
   dueDate: string | null;
   position: number;
+  assignee: { id: string; name: string } | null;
 };
 type List = { id: string; name: string; position: number; cards?: Card[] };
+type User = { id: string; name: string; email: string };
 
 
 
@@ -31,6 +33,8 @@ export function BoardView() {
   const [addingCardTo, setAddingCardTo] = useState<string | null>(null);
   const [deletingList, setDeletingList] = useState<string | null>(null);
   const [deletingCard, setDeletingCard] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+const [newCardAssignee, setNewCardAssignee] = useState<Record<string, string>>({});
 
   const base = `/api/workspaces/${workspaceId}/boards/${boardId}`;
 
@@ -48,6 +52,9 @@ export function BoardView() {
           })
         );
         setLists(listsWithCards);
+        const uRes = await apiFetch("/api/users");
+const uData = await uRes.json();
+if (uRes.ok) setUsers(uData.users);
       } catch {
         setError("Could not reach API");
       } finally {
@@ -98,11 +105,11 @@ export function BoardView() {
     try {
       const res = await apiFetch(`${base}/lists/${listId}/cards`, {
         method: "POST",
-        body: JSON.stringify({ 
-          title ,
-        priority: newCardPriority[listId] || "MEDIUM",
-  dueDate: newCardDueDate[listId] ? new Date(newCardDueDate[listId]).toISOString() : undefined,
-
+        body: JSON.stringify({
+          title,
+          priority: newCardPriority[listId] || "MEDIUM",
+          dueDate: newCardDueDate[listId] ? new Date(newCardDueDate[listId]).toISOString() : undefined,
+          assigneeId: newCardAssignee[listId] || null,
         }),
       });
       const data = await res.json();
@@ -116,6 +123,7 @@ export function BoardView() {
       setAddingCardTo(null);
       setNewCardPriority((prev) => ({ ...prev, [listId]: "" }));
 setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
+      setNewCardAssignee((prev) => ({ ...prev, [listId]: "" }));
     } catch {
       setError("Could not reach API");
     }
@@ -245,6 +253,13 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
                         <span className={`w-2 h-2 rounded-full ${priorityDot[card.priority] ?? priorityDot.MEDIUM}`} />
                         {card.priority.charAt(0) + card.priority.slice(1).toLowerCase()}
                       </span>
+                      {card.assignee && (
+  <span className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center" title={card.assignee.name}>
+    <span className="text-xs font-bold text-indigo-600">
+      {card.assignee.name.charAt(0).toUpperCase()}
+    </span>
+  </span>
+)}
                       {card.dueDate && (() => {
                         const { label, isOverdue } = formatDueDate(card.dueDate);
                         return (
@@ -291,23 +306,35 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
                       }}
                       className="w-full text-sm text-gray-800 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <div className="flex gap-2 mt-2">
-  <select
-    value={newCardPriority[list.id] ?? "MEDIUM"}
-    onChange={(e) => setNewCardPriority((prev) => ({ ...prev, [list.id]: e.target.value }))}
-    className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  >
-    <option value="LOW">Low</option>
-    <option value="MEDIUM">Medium</option>
-    <option value="HIGH">High</option>
-  </select>
-  <input
-    type="date"
-    value={newCardDueDate[list.id] ?? ""}
-    onChange={(e) => setNewCardDueDate((prev) => ({ ...prev, [list.id]: e.target.value }))}
-    className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
-</div>
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex gap-2">
+                        <select
+                          value={newCardPriority[list.id] ?? "MEDIUM"}
+                          onChange={(e) => setNewCardPriority((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                          className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="LOW">Low</option>
+                          <option value="MEDIUM">Medium</option>
+                          <option value="HIGH">High</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={newCardDueDate[list.id] ?? ""}
+                          onChange={(e) => setNewCardDueDate((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                          className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <select
+                        value={newCardAssignee[list.id] ?? ""}
+                        onChange={(e) => setNewCardAssignee((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">No assignee</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleCreateCard(list.id)}

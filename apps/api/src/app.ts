@@ -5,7 +5,7 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { workspacesRouter } from "./modules/workspaces/workspaces.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { searchRouter } from "./modules/search/search.routes.js";
-
+import { usersRouter } from "./modules/users/users.routes.js";
 export const app = express();
 
 app.use(
@@ -31,3 +31,4 @@ app.use("/api/auth", authRouter);
 app.use("/api/workspaces", workspacesRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/search", searchRouter);
+app.use("/api/users", usersRouter);
