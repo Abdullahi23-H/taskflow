@@ -43,7 +43,7 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 11 — Step 11.1:** Prepare backend for production
+**Phase 11 — Step 11.3:** Deploy database on Render
 
 ---
 
