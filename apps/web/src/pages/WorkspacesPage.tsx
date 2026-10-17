@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
 type Workspace = { id: string; name: string; createdAt: string };
-type Props = { userName: string; userEmail: string };
-
-export function WorkspacesPage(_props: Props) {
+export function WorkspacesPage() {
   const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [name, setName] = useState("");

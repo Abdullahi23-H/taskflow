@@ -69,7 +69,7 @@ function App() {
         element={
           user ? (
             <ProtectedLayout user={user} onLogout={handleLogout}>
-              <WorkspacesPage userName={user.name} userEmail={user.email} />
+              <WorkspacesPage />
             </ProtectedLayout>
           ) : (
             <Navigate to="/login" replace />
