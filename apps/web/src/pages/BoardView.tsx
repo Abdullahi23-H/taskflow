@@ -183,10 +183,10 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
     HIGH: "bg-red-500",
   };
 
-  function formatDueDate(iso: string) {
+  function formatDueDate(iso: string,status: string) {
     const d = new Date(iso);
     const now = new Date();
-    const isOverdue = d < now;
+    const isOverdue = d < now&& status !== "done";
     const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
     return { label, isOverdue };
   }
@@ -287,7 +287,7 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
   </span>
 )}
                       {card.dueDate && (() => {
-                        const { label, isOverdue } = formatDueDate(card.dueDate);
+                        const { label, isOverdue } = formatDueDate(card.dueDate,card.status);
                         return (
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isOverdue ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
                             {isOverdue ? "⚠ " : ""}{label}
