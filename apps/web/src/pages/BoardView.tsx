@@ -150,6 +150,26 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
       setDeletingCard(null);
     }
   }
+  async function handleChangeStatus(listId: string, cardId: string, status: string) {
+    setError(null);
+    try {
+      const res = await apiFetch(`${base}/lists/${listId}/cards/${cardId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Failed to update status"); return; }
+      setLists((prev) =>
+        prev.map((l) =>
+          l.id === listId
+            ? { ...l, cards: (l.cards ?? []).map((c) => (c.id === cardId ? data.card : c)) }
+            : l
+        )
+      );
+    } catch {
+      setError("Could not reach API");
+    }
+  }
 
   const statusColor: Record<string, string> = {
     todo: "bg-gray-200 text-gray-600",
@@ -246,9 +266,15 @@ setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
                   >
                     <p className="text-sm text-gray-800 font-medium leading-snug pr-6">{card.title}</p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[card.status] ?? statusColor.todo}`}>
-                        {card.status.replace("_", " ")}
-                      </span>
+                    <select
+                        value={card.status}
+                        onChange={(e) => handleChangeStatus(list.id, card.id, e.target.value)}
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColor[card.status] ?? statusColor.todo}`}
+                      >
+                        <option value="todo">todo</option>
+                        <option value="in_progress">in progress</option>
+                        <option value="done">done</option>
+                      </select>
                       <span className="flex items-center gap-1 text-xs text-gray-500">
                         <span className={`w-2 h-2 rounded-full ${priorityDot[card.priority] ?? priorityDot.MEDIUM}`} />
                         {card.priority.charAt(0) + card.priority.slice(1).toLowerCase()}
