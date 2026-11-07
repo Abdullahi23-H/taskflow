@@ -1,26 +1,40 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
-type Card = { id: string; title: string; status: string; position: number };
-type List = { id: string; name: string; position: number; cards?: Card[] };
-
-type Props = {
-  workspaceId: string;
-  boardId: string;
-  boardName: string;
-  onBack: () => void;
+type Card = {
+  id: string;
+  title: string;
+  status: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  dueDate: string | null;
+  position: number;
+  assignee: { id: string; name: string } | null;
 };
+type List = { id: string; name: string; position: number; cards?: Card[] };
+type User = { id: string; name: string; email: string };
 
-export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
+
+
+export function BoardView() {
+  const navigate = useNavigate();
+  const { workspaceId, boardId } = useParams<{ workspaceId: string; boardId: string }>();
+  const location = useLocation();
+  const boardName = (location.state as any)?.boardName ?? "Board";
+
   const [lists, setLists] = useState<List[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newListName, setNewListName] = useState("");
   const [creatingList, setCreatingList] = useState(false);
   const [newCardTitles, setNewCardTitles] = useState<Record<string, string>>({});
+  const [newCardPriority, setNewCardPriority] = useState<Record<string, string>>({});
+  const [newCardDueDate, setNewCardDueDate] = useState<Record<string, string>>({}); 
   const [addingCardTo, setAddingCardTo] = useState<string | null>(null);
   const [deletingList, setDeletingList] = useState<string | null>(null);
   const [deletingCard, setDeletingCard] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+const [newCardAssignee, setNewCardAssignee] = useState<Record<string, string>>({});
 
   const base = `/api/workspaces/${workspaceId}/boards/${boardId}`;
 
@@ -38,6 +52,9 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
           })
         );
         setLists(listsWithCards);
+        const uRes = await apiFetch("/api/users");
+const uData = await uRes.json();
+if (uRes.ok) setUsers(uData.users);
       } catch {
         setError("Could not reach API");
       } finally {
@@ -88,7 +105,12 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
     try {
       const res = await apiFetch(`${base}/lists/${listId}/cards`, {
         method: "POST",
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({
+          title,
+          priority: newCardPriority[listId] || "MEDIUM",
+          dueDate: newCardDueDate[listId] ? new Date(newCardDueDate[listId]).toISOString() : undefined,
+          assigneeId: newCardAssignee[listId] || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to create card"); return; }
@@ -99,6 +121,9 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
       );
       setNewCardTitles((prev) => ({ ...prev, [listId]: "" }));
       setAddingCardTo(null);
+      setNewCardPriority((prev) => ({ ...prev, [listId]: "" }));
+setNewCardDueDate((prev) => ({ ...prev, [listId]: "" }));
+      setNewCardAssignee((prev) => ({ ...prev, [listId]: "" }));
     } catch {
       setError("Could not reach API");
     }
@@ -125,6 +150,26 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
       setDeletingCard(null);
     }
   }
+  async function handleChangeStatus(listId: string, cardId: string, status: string) {
+    setError(null);
+    try {
+      const res = await apiFetch(`${base}/lists/${listId}/cards/${cardId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Failed to update status"); return; }
+      setLists((prev) =>
+        prev.map((l) =>
+          l.id === listId
+            ? { ...l, cards: (l.cards ?? []).map((c) => (c.id === cardId ? data.card : c)) }
+            : l
+        )
+      );
+    } catch {
+      setError("Could not reach API");
+    }
+  }
 
   const statusColor: Record<string, string> = {
     todo: "bg-gray-200 text-gray-600",
@@ -132,12 +177,26 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
     done: "bg-green-100 text-green-700",
   };
 
+  const priorityDot: Record<string, string> = {
+    LOW: "bg-gray-400",
+    MEDIUM: "bg-yellow-400",
+    HIGH: "bg-red-500",
+  };
+
+  function formatDueDate(iso: string,status: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const isOverdue = d < now&& status !== "done";
+    const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return { label, isOverdue };
+  }
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#1d2b3a" }}>
       {/* Navbar */}
       <header className="flex items-center gap-3 px-6 py-4 flex-shrink-0" style={{ background: "#17202b" }}>
         <button
-          onClick={onBack}
+          onClick={() => navigate(`/workspaces/${workspaceId}`, { state: { workspaceName: (location.state as any)?.workspaceName } })}
           className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,10 +265,35 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
                     className="bg-white rounded-xl px-3 py-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 cursor-default group/card relative"
                   >
                     <p className="text-sm text-gray-800 font-medium leading-snug pr-6">{card.title}</p>
-                    <div className="flex items-center mt-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[card.status] ?? statusColor.todo}`}>
-                        {card.status.replace("_", " ")}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <select
+                        value={card.status}
+                        onChange={(e) => handleChangeStatus(list.id, card.id, e.target.value)}
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusColor[card.status] ?? statusColor.todo}`}
+                      >
+                        <option value="todo">todo</option>
+                        <option value="in_progress">in progress</option>
+                        <option value="done">done</option>
+                      </select>
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <span className={`w-2 h-2 rounded-full ${priorityDot[card.priority] ?? priorityDot.MEDIUM}`} />
+                        {card.priority.charAt(0) + card.priority.slice(1).toLowerCase()}
                       </span>
+                      {card.assignee && (
+  <span className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center" title={card.assignee.name}>
+    <span className="text-xs font-bold text-indigo-600">
+      {card.assignee.name.charAt(0).toUpperCase()}
+    </span>
+  </span>
+)}
+                      {card.dueDate && (() => {
+                        const { label, isOverdue } = formatDueDate(card.dueDate,card.status);
+                        return (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${isOverdue ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"}`}>
+                            {isOverdue ? "⚠ " : ""}{label}
+                          </span>
+                        );
+                      })()}
                     </div>
                     {/* Card delete button */}
                     <button
@@ -248,6 +332,35 @@ export function BoardView({ workspaceId, boardId, boardName, onBack }: Props) {
                       }}
                       className="w-full text-sm text-gray-800 px-2 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex gap-2">
+                        <select
+                          value={newCardPriority[list.id] ?? "MEDIUM"}
+                          onChange={(e) => setNewCardPriority((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                          className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="LOW">Low</option>
+                          <option value="MEDIUM">Medium</option>
+                          <option value="HIGH">High</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={newCardDueDate[list.id] ?? ""}
+                          onChange={(e) => setNewCardDueDate((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                          className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <select
+                        value={newCardAssignee[list.id] ?? ""}
+                        onChange={(e) => setNewCardAssignee((prev) => ({ ...prev, [list.id]: e.target.value }))}
+                        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">No assignee</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => handleCreateCard(list.id)}

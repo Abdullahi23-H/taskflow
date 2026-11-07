@@ -1,5 +1,5 @@
 import { app } from "./app.js";
-const port = 3001;
+const port = Number(process.env.PORT) || 3001;
 
 app.listen(port, () => {
   console.log(`TaskFlow API running at http://localhost:${port}`);

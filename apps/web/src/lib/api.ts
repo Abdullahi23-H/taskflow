@@ -1,9 +1,8 @@
 import { getToken } from "./auth-storage";
-export const API_URL = "http://localhost:3001";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 export async function apiFetch(
     path: string,
     options: RequestInit = {},
-
 ): Promise<Response>{
     const token  = getToken();
     const headers = new Headers(options.headers);
@@ -16,3 +15,4 @@ export async function apiFetch(
     return  fetch(`${API_URL}${path}`, { ...options, headers })
 
 }
+
