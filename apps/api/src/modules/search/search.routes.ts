@@ -13,7 +13,7 @@ searchRouter.get("/", async (req, res) => {
 
     const cards = await prisma.card.findMany({
       where: {
-        title: { contains: q },
+        title: { contains: q, mode: "insensitive" },
         list: {
           board: {
             workspace: { ownerId: req.userId! },
