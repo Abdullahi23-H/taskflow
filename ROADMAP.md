@@ -43,7 +43,12 @@ Cursor must remind the user of this workflow at the START and END of every phase
 This is not optional. Never skip it.
 
 ## Current step
-**Phase 11 — Step 11.3:** Deploy database on Render
+**Phase 11 — Step 11.7:** Test everything in production
+
+Live URLs:
+- Frontend: https://taskflow-web-beta.vercel.app
+- API: https://taskflow-3-ac6o.onrender.com
+- DB: Render PostgreSQL (`taskflow-db`)
 
 ---
 
@@ -125,7 +130,7 @@ This is not optional. Never skip it.
 > git checkout -b feat/phase-11-deploy
 > ```
 
-- [ ] **Step 11.1 — Prepare backend for production**
+- [x] **Step 11.1 — Prepare backend for production**
   - Add `"build": "tsc"` script to `apps/api/package.json`
   - Add `"start": "node dist/index.js"` script
   - Move `JWT_SECRET` and `DATABASE_URL` to `process.env` (no hardcoded values)
@@ -133,19 +138,19 @@ This is not optional. Never skip it.
   - Create `apps/api/.env.example` with all required variable names (no real values)
   - Add `prisma migrate deploy` to the build command
 
-- [ ] **Step 11.2 — Prepare frontend for production**
+- [x] **Step 11.2 — Prepare frontend for production**
   - Replace every hardcoded `http://localhost:3001` with `import.meta.env.VITE_API_URL`
   - Update `apps/web/src/lib/api.ts` to use `VITE_API_URL` as the base URL
   - Create `apps/web/.env.example` with `VITE_API_URL=https://your-render-url.onrender.com`
   - Verify `npm run build` completes without errors
 
-- [ ] **Step 11.3 — Deploy database on Render**
+- [x] **Step 11.3 — Deploy database on Render**
   - Go to render.com → create free account
   - Click New → PostgreSQL → free tier
   - Copy the **Internal Database URL**
   - Save it — needed in next step
 
-- [ ] **Step 11.4 — Deploy backend on Render**
+- [x] **Step 11.4 — Deploy backend on Render**
   - Click New → Web Service on Render
   - Connect GitHub repo
   - Set root directory: `apps/api`
@@ -155,7 +160,7 @@ This is not optional. Never skip it.
   - Add environment variables: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`, `FRONTEND_URL` (add after Step 11.5)
   - Copy the Render backend URL after deploy succeeds
 
-- [ ] **Step 11.5 — Deploy frontend on Vercel**
+- [x] **Step 11.5 — Deploy frontend on Vercel**
   - Go to vercel.com → create free account
   - Connect GitHub repo → select `apps/web` folder
   - Add environment variable: `VITE_API_URL=<Render backend URL from Step 11.4>`
